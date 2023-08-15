@@ -17,6 +17,12 @@ jobs:
           echo $VPN_CONFIG | base64 -di > .github/ovpn/config.ovpn
           sudo apt install openvpn 
           sudo -b openvpn --config .github/ovpn/config.ovpn
+          if ping -w 60 -c 1 192.168.1.1; then
+            echo 'VPN Established'
+          else
+            echo 'VPN Failure'
+            exit 1
+          fi
       - name: Disconnect VPN
         run: sudo killall openvpn
 
