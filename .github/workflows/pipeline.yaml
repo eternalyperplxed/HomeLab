@@ -15,7 +15,7 @@ jobs:
         run: |
           mkdir -p .github/ovpn
           echo $VPN_CONFIG | base64 -di > .github/ovpn/config.ovpn
-          apt install openvpn 
+          sudo apt install openvpn 
           sudo -b openvpn --config .github/ovpn/config.ovpn
       - name: Disconnect VPN
         run: sudo killall openvpn
