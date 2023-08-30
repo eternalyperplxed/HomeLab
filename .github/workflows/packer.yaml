@@ -1,4 +1,4 @@
-name: test
+name: Packer
 permissions:
   contents: read
   id-token: write
