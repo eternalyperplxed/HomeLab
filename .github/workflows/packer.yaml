@@ -1,0 +1,58 @@
+name: test
+permissions:
+  contents: read
+  id-token: write
+on: 
+  push:
+    paths:
+      - 'Packer/**'
+
+defaults:
+  run: 
+    shell: bash
+    working-directory: Packer
+      
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    name: Packer Build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: "1.9.4"
+
+      - name: Packer Init
+        run: packer init .
+
+      - name: Packer Validate
+        run: packer validate .
+
+      - name: Initiate OpenVPN
+        env: 
+          VPN_CONFIG: ${{ secrets.VPN_CONF }}
+        run: |
+          mkdir -p .github/ovpn
+          echo $VPN_CONFIG | base64 -di > .github/ovpn/config.ovpn
+          sudo apt install openvpn 
+          sudo -b openvpn --config .github/ovpn/config.ovpn
+          if ping -w 60 -c 1 192.168.1.1; then
+            echo 'VPN Established'
+          else
+            echo 'VPN Failure'
+            exit 1
+          fi
+
+      - name: Packer Build
+        env: 
+          PM_URL: ${{ secrets.PM_URL }}
+          PM_USER: ${{ secrets.PACKER_PM_USER}}
+          PM_TOKEN: ${{ secrets.PACKER_PM_TOKEN}}
+        run: packer build .
+
+      - name: Disconnect VPN
+        run: sudo killall openvpn
+
